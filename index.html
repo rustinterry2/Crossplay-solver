@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f6f8fb"><title>Crossplay Solver</title><meta name="description" content="Import a Crossplay screenshot, review the 15×15 board and rack, and discover the highest-scoring moves."><style>:root{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:#162337;background:#f6f8fb;font-synthesis:none;-webkit-text-size-adjust:100%;color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb}button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible{outline:3px solid #214e95;outline-offset:3px}button:disabled{opacity:.55;cursor:wait}#app{margin:0 auto;max-width:620px;min-height:100dvh}.page{padding:56px 12px 36px;min-height:100dvh}.page[hidden]{display:none!important}h1{font-size:23px;font-weight:750;letter-spacing:-.5px;margin:0 0 10px;line-height:1.3}h2{margin:0;font-size:20px;letter-spacing:-.35px}.subhead,.status{font-size:13px;color:#5d6a7a;line-height:1.4}.subhead{margin:4px 0 12px}.status{margin:21px 0 14px;min-height:35px}.status.warning{color:#a24b16}.btn{display:block;width:100%;border:0;border-radius:12px;background:#fff;color:#162337;min-height:42px;padding:10px 14px;text-align:center;font-size:14px;font-weight:500;white-space:normal}.btn.primary{background:#1f62b5;color:#fff}.btn.green{background:#058f64;color:#fff}.btn.light{background:#dee7f6}.btn.large{min-height:55px;font-size:18px}.btn.compact{width:auto;min-width:60px;min-height:34px;padding:7px 15px}.import-title{margin:0 0 20px;font-size:27px;line-height:1.55}.import-subtitle{font-size:16px;color:#5d6a7a;margin:0 0 40px}.import-card{background:#fff;border-radius:18px;padding:24px 18px 16px;margin:0 10px 24px}.import-card h2{font-size:21px;margin:0 0 14px}.import-card p{font-size:13px;color:#5d6a7a;line-height:1.5;margin:0 0 22px}.import-card .btn{margin-bottom:12px}.import-card .btn.large{min-height:61px;font-size:16px}.import-card .btn.light{min-height:46px;font-size:15px}.import-card .btn.white{margin-bottom:0}.standalone{margin:0 10px 14px;width:calc(100% - 20px);min-height:46px}.import-card+.standalone{margin-top:0}#import-status{margin:31px 10px}.preview-box{background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;height:min(55vh,calc(100dvh - 340px));min-height:200px;margin:22px 8px 20px;padding:8px}.preview-box img{width:100%;height:100%;object-fit:contain}#preview-page .btn{margin-top:12px}.head-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 1px}.head-row h1{margin-bottom:0}.head-row .btn{align-self:center}.board{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:1.2px;aspect-ratio:1/1;margin-left:auto;margin-right:auto;touch-action:manipulation}.review-board{width:min(calc(100vw - 24px),42vh,calc(620px - 24px));margin-top:9px}.results-board{width:min(calc(100vw - 24px),33vh,calc(620px - 24px));margin-top:13px}.cell{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;border:0;border-radius:2px;padding:0;line-height:1;overflow:hidden;font-size:clamp(8px,2.6vw,15px);font-weight:400;background:#ececf0;color:#5d6a7a;aspect-ratio:1/1}.review-board .cell{font-size:clamp(10px,3.3vw,16px)}.results-board .cell{font-size:clamp(8px,2.8vw,14px)}.cell.tile{background:#315b98;color:#fff}.cell.new-tile{background:#058f64;color:#fff}.cell.p2w{background:#dee7f6}.cell.p3w{background:#e9dded}.cell.p2l{background:#f1e7c9}.cell.p3l{background:#dce9d1}.rack-label{font-size:13px;letter-spacing:-.1px;margin:16px 0 10px;font-weight:750}.rack{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.rack button{background:#315b98;color:#fff;border:0;border-radius:12px;aspect-ratio:1/1;font-size:23px;line-height:1}.rack button.unknown{background:#f1e7c9;color:#162337}.rack button.empty{background:#ececf0;color:#162337}#review-status{margin-top:21px;min-height:39px}#solve-btn{margin-top:7px}#import-another-btn{margin-top:10px}.editor-header{display:flex;align-items:center;gap:15px;margin:0 4px 8px}.editor-header h1{margin:0;font-size:20px}.editor-header .btn{min-height:42px}.zoom-board{width:100%;max-width:365px;margin:12px auto 0;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;min-height:285px;align-content:start;justify-items:stretch}.zoom-board button{aspect-ratio:1/1;width:100%;max-width:55px;margin:0 auto;background:#ececf0;color:#5d6a7a;border:0;border-radius:8px;font-size:21px}.zoom-board button.tile{background:#315b98;color:#fff}.zoom-board button.selected{background:#a7b4c6;color:#fff}#blank-btn{margin:1px 4px 10px;width:calc(100% - 8px);min-height:38px}.palette{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;max-width:360px;margin:0 auto 12px}.palette button{border-radius:10px;border:0;background:#315b98;color:#fff;aspect-ratio:1/1;font-size:18px}.editor-actions{display:flex;gap:10px;margin:0 4px}.editor-actions .btn{flex:1}.move-head{display:flex;align-items:center;justify-content:space-between;margin-top:9px}.move-head h2{font-size:21px;font-weight:750}.move-head strong{font-size:23px;color:#058f64}.breakdown{font-size:13px;margin:14px 0 10px;min-height:25px}.navigation{display:flex;align-items:center;gap:7px}.navigation .btn{width:35%;min-height:42px}.navigation strong{text-align:center;flex:1;font-size:13px}.alternatives{display:grid;gap:3px;margin-top:11px}.alternatives button{border-radius:9px;border:0;background:#fff;min-height:29px;font-size:12px;color:#162337}.alternatives button.selected{background:#dce9d1}.result-actions{display:flex;gap:10px;margin-top:12px}.result-actions .btn{flex:1;min-height:43px}#results-status{margin:11px 0}#results-page .subhead{margin:4px 0 2px}#editor-page .status{margin:14px 4px}@media(min-width:600px){.page{padding-left:22px;padding-right:22px}.review-board{width:min(42vh,540px)}.results-board{width:min(33vh,510px)}.cell{font-size:17px}.review-board .cell{font-size:17px}.results-board .cell{font-size:15px}}@media(max-height:730px){.page{padding-top:35px}.import-subtitle{margin-bottom:24px}.review-board{width:min(calc(100vw - 24px),38vh)}.results-board{width:min(calc(100vw - 24px),29vh)}.zoom-board{min-height:215px}.zoom-board button{max-width:42px}}
+</style></head>
+<body>
+<main id="app" aria-live="polite">
+  <section id="import-page" class="page">
+    <h1 class="import-title">Crossplay Solver</h1><p class="import-subtitle">Import • Review • Solve</p>
+    <div class="import-card"><h2>Import full screenshot</h2><p>Board + all 7 rack tiles • No cropping</p>
+      <button id="photos-btn" class="btn primary large">Import Screenshot from Photos</button>
+      <button id="files-btn" class="btn light">Choose from Files</button>
+      <button id="clipboard-btn" class="btn white">Import from Clipboard</button>
+      <input id="photos-input" type="file" accept="image/*" hidden><input id="files-input" type="file" accept="image/*,.png,.jpg,.jpeg,.webp" hidden>
+    </div>
+    <button id="resume-btn" class="btn white standalone">Resume last board</button>
+    <button id="example-btn" class="btn white standalone">Use included example</button>
+    <p id="import-status" class="status">Full-resolution screenshot import • No cropping</p>
+  </section>
+  <section id="preview-page" class="page" hidden>
+    <h1>Full screenshot</h1><p id="preview-caption" class="subhead">Board and rack will both be imported.</p>
+    <div class="preview-box"><img id="preview-image" alt="Full imported Crossplay screenshot"></div>
+    <button id="read-btn" class="btn primary large">Read Board and Rack</button>
+    <button id="another-btn" class="btn white">Choose Another Screenshot</button>
+    <p id="preview-status" class="status">Image is not cropped or resized for recognition.</p>
+  </section>
+  <section id="review-page" class="page" hidden>
+    <div class="head-row"><h1>Review board</h1><button id="new-btn" class="btn white compact">New</button></div>
+    <p id="review-caption" class="subhead">Tap a square to edit</p>
+    <div id="review-board" class="board review-board" role="grid" aria-label="Crossplay board"></div>
+    <h2 class="rack-label">RACK &nbsp;•&nbsp; tap any tile to correct</h2>
+    <div id="rack" class="rack" role="group" aria-label="Your seven tiles"></div>
+    <p id="review-status" class="status">Verify the rack before solving.</p>
+    <button id="solve-btn" class="btn primary large">Find Best Move</button>
+    <button id="import-another-btn" class="btn white">Import another screenshot</button>
+  </section>
+  <section id="editor-page" class="page" hidden>
+    <div class="editor-header"><button id="done-btn" class="btn white compact">Done</button><h1 id="editor-heading">Edit square</h1></div>
+    <p id="editor-tip" class="subhead">Tap a nearby tile, then choose its letter.</p>
+    <div id="zoom-board" class="zoom-board"></div>
+    <button id="blank-btn" class="btn white">Existing blank: OFF</button>
+    <div id="palette" class="palette" role="group" aria-label="Choose letter"></div>
+    <div class="editor-actions"><button id="clear-btn" class="btn white">Clear / EMPTY</button><button id="rack-blank-btn" class="btn green">? &nbsp;Rack blank</button></div>
+    <p id="editor-status" class="status">Edits automatically update the board.</p>
+  </section>
+  <section id="results-page" class="page" hidden>
+    <div class="head-row"><h1>Best moves</h1><button id="edit-btn" class="btn white compact">Edit</button></div>
+    <div class="move-head"><h2 id="move-heading"></h2><strong id="move-score"></strong></div>
+    <p id="move-position" class="subhead"></p>
+    <div id="results-board" class="board results-board" role="grid" aria-label="Best move preview"></div>
+    <p id="result-breakdown" class="breakdown"></p>
+    <div class="navigation"><button id="previous-btn" class="btn white">◀ Previous</button><strong id="rank-caption"></strong><button id="next-btn" class="btn white">Next ▶</button></div>
+    <div id="alternatives" class="alternatives"></div>
+    <div class="result-actions"><button id="save-btn" class="btn primary">Save image</button><button id="new-screenshot-btn" class="btn white">New screenshot</button></div>
+    <p id="results-status" class="status">Green = new tiles • lowercase = blank tile</p>
+  </section>
+</main>
+<script>/* Original Pyto template data, losslessly compressed. */
+const OCR_COMPRESSED = {"glyph":"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","rack":"eNrtmkduxDAMRe/i9Sz8t9ml994zyEmC3D0OiCBTTJGi6Dr0hpC/q0Q+05S+qv1qb1nVjhtoE2RRRzc6kD5A0EnQ6WB19gJ/u3U6WL226f8722+wsk/QW8/H9uapA+kD1tuSvvWG7W1wp4v6xgXZ9+FOlwItZ6sWgYAuEGFFACaAAAQCShGAMSHgc1EdNLlAYw47SgnkeERa5fw1cYDOn7inbOl/eQB5h0FhO5OzM9Rb+18KYGgDmAcK97gSr0T/lPxbjA/F99DMgyMvEEjvWBjFls8GJAyIHEAuB8DyMNqu7cLxSY4/Ev6Rk5eU+XdmfJWC4NgvIzB01QC69Pxj1835VE/61Pt3uv5dBoIT+kM4JXNG5tz7f2FHnCT00MepD19CjCEKPfSJIaDJBS4oJbgkc+X+3xB66HPWu5oZKdbLsHBNPLghc9vvmgN9eTV/gkHZrUL9WCg8aevXxrb+fnPXsydkdPfjx1fyD7EymDvBkB8fGnhZsXBHPLgn80DmcbjpR/SMh7Vd7OivtNJJHIzFKvmjZCw2yrNbyKwnGiqa8hir3pWLz2R3p9cPKHEEgS72eYfc/rfE1yjKCeoVPQYfdVmyokcABkIAfBCA8gMwLgTUaQTU/giAJwJye9fiJOYE4cktF1AtDRtQj9/g0HdAt4Lg2RkEG+3QQ3fV7Yt+paS/bU1iXiWvfE3iUD8FDQheqEjwSuaNzDuZj1/z/QMDgQES","score":"eNrtXEly3DAM/IvOcwCyVSpfSfklqfw9cVXi0kKgsZGiZqST7ZZnoYBGYyF/LbT8+LlQ2cX/LwC3b+DtBWAJ//ipje9/bMH/fhFePYOTjguv9jK4sj7o+Wz/FsZl+zDal2LiCEf+Af0reC2PHhTAIdy3hPIjogROgg1s31TEKYe7XGRzwyvinvVFz7cKh/bHrafriXHlPLC8PRau1QJtkrXj6BvqOFqhLJ7/fjc+Bc4UsrBsrO+NT6EFLE8h44X2dKIHbjOi28uujaeiEDnS3Xm0QDkFEPp0vXQA27ONEJ7XKTd+ZfxWAZ6iQBTnM128RATc+DPjqoX0jvIXUQHcT0ehPKF3HsC3Srhxo/1GGmNsK3r3KQp+6tQgDEXbnBwyrqOYFB6Lv8c7gDmwy5wunvS+GsysW9jZ+CRawDME4KYAsAIff9VXUPIB1OPfVjIEjprExzumZFWOdN5/U5L6BAtkPhefkAIiirpoRqB5A7MNl6wF96CPMgFQxHl575Cc7UlhclCEw4c5iSfTgc+V6QB7/Lw8LbLgWihlGOoHyW1LhTr72qk5iapOve9bNLzCie9oXMRL7C9U288+3atrAc6lA8eRTxbtUsQ1Jz6OvHbOuXuI4uREp6fmg3kobupGZe9Y4eZIc3ReEWhNY8Y/rDQ4TUWghAIAjWsWdDCBk6tuIQbIzp0XNlHTo1aJd7DtWhDfEVSMYjU7166C8NoH04Ev1SPDR5/y4oMaOTE5nHOTdV1CsX6tcqqwkNr7WC96CN9HOgI0bMmaK/Piwryac1WV0wciT9UC8wTKtNq9HAXo7U+HC9twqMT4fArwxeppXPj6FMA5J87iA5w47OS03oXaxtWHjOO8hjtnJBTDM/VXYXMF1s4bKXoUD2U80YLGxUjgchTQ1cVNg0yk46Tjig7S96mT+ZwEDkt1EOb1kqlhC+8cPfRnH3ueJBG4cpiPdje3Ut7v46T7MFl83HROApDyPTjAWHS7Qq3g2TjgvSj4tbAoiJZxOB7qPuQ0GnXGE+OW6fUlvcF1KCuObfBFcIp2DwgMpOoDrVRjvxM2CEfM+Uzu4tlmSWaaMm9CoMG6K0gMnxPKPcuGi7u0ytpv+9jneceK/dUC37qcKTRocpiA6tWMR69/03b8bEDTg0CgoMPOCJx3R3DxszZw/+FoBHBnK59BVoLwQG0U2pd91CVStupCBX22Egc5gAs4gCyJMTzDkgCFrDcCmDigTOCad0/hvDuC6xTA4pdpUgQDCpBx4XdtDyf4gAEcUIQsJighZvtsJf4+4VZiAjRA8a3CWlivwHEoiYeafNZQsrtDzxnkrNgUqmly3CW2Aml9zc6OU7XABPsIHXLvkrjcg+CdHEgWFvK1R9DCiMzeW0t3US1h/X+xxwDSHeX5wg5Fv9ME3s8apj6Tw0a+SNcWoicT5CK2sWVGHKxT3fgYPFc8APa1d3yVblm6YYg/dhwYuF38xl/cxdnm4tIEZLs/VS4GHsNVgHkoKLRd1TdjHxmc8XHEjZ+FmzaU73tBzXZ/Y9Mxi9FEcHFW7FuYXxrkjs9JAbi0dVPAq+NrFwcyoNW6lKq4kgpga91s+LW8/f4D2qY8DQ=="};
+</script><script>/* JavaScript port of crossplay_core.py, including legal move checks, blanks,
+   multipliers, all cross-words, anchor traversal and seven-tile sweep. */
+'use strict';
+const Crossplay = (() => {
+ const SIZE=15,ABC='ABCDEFGHIJKLMNOPQRSTUVWXYZ',POINT=Object.fromEntries([...ABC].map((ch,i)=>[ch,[1,4,3,2,1,4,4,3,1,10,6,2,3,1,1,3,10,1,1,1,2,6,5,8,4,10][i]])),
+ PREMIUM_ROWS=[
+ '3L . . 3W . . . 2L . . . 3W . . 3L',
+ '. 2W . . . . 3L . 3L . . . . 2W .',
+ '. . . . 2L . . . . . 2L . . . .',
+ '3W . . 2L . . . 2W . . . 2L . . 3W',
+ '. . 2L . . 3L . . . 3L . . 2L . .',
+ '. . . . 3L . . 2L . . 3L . . . .',
+ '. 3L . . . . . . . . . . . 3L .',
+ '2L . . 2W . 2L . . . 2L . 2W . . 2L',
+ '. 3L . . . . . . . . . . . . 3L .',
+ '. . . . 3L . . 2L . . 3L . . . .',
+ '. . 2L . . 3L . . . 3L . . 2L . .',
+ '3W . . 2L . . . 2W . . . 2L . . 3W',
+ '. . . . 2L . . . . . 2L . . . .',
+ '. 2W . . . . 3L . 3L . . . . 2W .',
+ '3L . . 3W . . . 2L . . . 3W . . 3L'];
+ const PREMIUM=PREMIUM_ROWS.map(row=>row.split(' '));
+ function coord(r,c){return String.fromCharCode(65+c)+(r+1)}
+ function boardFromRows(rows){if(rows.length!==15||rows.some(v=>v.length!==15))throw Error('Expected 15 rows of 15 letters');return rows.map(row=>[...row].map(ch=>ch==='.'?null:{letter:ch.toUpperCase(),blank:ch!==ch.toUpperCase()}));}
+ function boardToRows(board){return board.map(row=>row.map(x=>x?x.blank?x.letter.toLowerCase():x.letter:'.').join(''));}
+ function inside(r,c){return r>=0&&c>=0&&r<15&&c<15;}
+ function lowerBound(words,target,lo,hi){while(lo<hi){let mid=(lo+hi)>>1;if(words[mid]<target)lo=mid+1;else hi=mid;}return lo;}
+ class Lexicon {
+  constructor(words){this.words=Array.from(new Set(words.map(w=>w.trim().toUpperCase()).filter(w=>/^[A-Z]{2,15}$/.test(w)))).sort();this.set=new Set(this.words);this.n=this.words.length;this.cache=new Map();}
+  has(word){return this.set.has(word)}
+  child(state,letter){const [prefix,lo,hi]=state,key=prefix+'|'+lo+'|'+hi+'|'+letter;let cached=this.cache.get(key);if(cached!==undefined)return cached;let target=prefix+letter,left=lowerBound(this.words,target,lo,hi),right=lowerBound(this.words,target+'[',left,hi);let result=left<right?[target,left,right]:null;if(this.cache.size>130000)this.cache.clear();this.cache.set(key,result);return result;}
+  get root(){return ['',0,this.n]}
+ }
+ function anchorsFor(board){const a=new Set();let has=board.some(row=>row.some(Boolean));if(!has){a.add(7*15+7);return a;}
+ for(let r=0;r<15;r++)for(let c=0;c<15;c++)if(!board[r][c]&&[[0,-1],[0,1],[-1,0],[1,0]].some(([dr,dc])=>inside(r+dr,c+dc)&&board[r+dr][c+dc]))a.add(r*15+c);return a;}
+ function scan(board,overlay,r,c,axis){let dr=axis==='H'?0:1,dc=axis==='H'?1:0,at=(a,b)=>overlay.get(a*15+b)||(inside(a,b)?board[a][b]:null),sr=r,sc=c;
+ while(inside(sr-dr,sc-dc)&&at(sr-dr,sc-dc)){sr-=dr;sc-=dc;}let tiles=[];
+ for(let rr=sr,cc=sc;inside(rr,cc)&&at(rr,cc);rr+=dr,cc+=dc)tiles.push({row:rr,col:cc,tile:at(rr,cc),placed:overlay.has(rr*15+cc)});
+ return {start:[sr,sc],tiles};}
+ function scoreWord(tiles){let s=0,m=1;for(let {row,col,tile,placed} of tiles){let pts=tile.blank?0:POINT[tile.letter],p=PREMIUM[row][col];if(placed){if(p==='2L')pts*=2;if(p==='3L')pts*=3;if(p==='2W')m*=2;if(p==='3W')m*=3;}s+=pts;}return s*m;}
+ function validate(board,placements,lex,rack,orientation){
+  if(placements.length<1||placements.length>7)throw Error('Wrong number of tiles');let overlay=new Map(),available={};for(let ch of rack)available[ch]=(available[ch]||0)+1;
+  for(let p of placements){if(!inside(p.row,p.col)||board[p.row][p.col])throw Error('Overwrites board');let id=p.row*15+p.col,k=p.blank?'?':p.letter;
+    if(overlay.has(id))throw Error('Duplicate placement');overlay.set(id,{letter:p.letter,blank:p.blank});available[k]=(available[k]||0)-1;if(available[k]<0)throw Error('Tile unavailable');}
+  let rows=new Set(placements.map(p=>p.row)),cols=new Set(placements.map(p=>p.col));if(rows.size>1&&cols.size>1)throw Error('Not in one line');
+  let occupied=board.some(row=>row.some(Boolean));
+  if(!occupied){if(!overlay.has(7*15+7))throw Error('Center required');}
+  else if(!placements.some(({row,col})=>[[0,-1],[0,1],[-1,0],[1,0]].some(([dr,dc])=>inside(row+dr,col+dc)&&board[row+dr][col+dc])))throw Error('Must connect');
+  let axis=placements.length>1?(rows.size===1?'H':'V'):orientation||'H',p=placements[0],main=scan(board,overlay,p.row,p.col,axis);
+  if(placements.some(p=>!main.tiles.some(t=>t.row===p.row&&t.col===p.col)))throw Error('Gaps');
+  let seen=new Set(),words=[];
+  function consider(s,dir){if(s.tiles.length<2)return;let id=s.start.join(',')+dir;if(seen.has(id))return;seen.add(id);let word=s.tiles.map(x=>x.tile.letter).join('');if(!lex.has(word))throw Error('Not in dictionary: '+word);
+    words.push({word,score:scoreWord(s.tiles),start:s.start,direction:dir});}
+  consider(main,axis);let cross=axis==='H'?'V':'H';for(let p of placements)consider(scan(board,overlay,p.row,p.col,cross),cross);
+  if(!words.length)throw Error('No word');let sweep=placements.length===7?40:0;
+  return {placements:placements.slice().sort((a,b)=>a.row-b.row||a.col-b.col),words,sweep,total:sweep+words.reduce((s,w)=>s+w.score,0),main_word:words[0].word,main_start:words[0].start,main_direction:words[0].direction};
+ }
+ function solve(rows,rack,lex,topN=10){
+  rack=rack.toUpperCase().replace(/\s/g,'');if(!rack||rack.length>7||!/^[A-Z?]+$/.test(rack))throw Error('Rack requires 1–7 letters; ? represents blank');
+  const board=boardFromRows(rows),anchors=anchorsFor(board),results=new Map(),rackCount={};for(let ch of rack)rackCount[ch]=(rackCount[ch]||0)+1;
+  const n=rack.length,started=performance.now();let states=0,candidates=0;
+  for(let dir of ['H','V']){
+    let dr=dir==='H'?0:1,dc=dir==='H'?1:0,checks=new Map();
+    for(let r=0;r<15;r++)for(let c=0;c<15;c++){
+      if(board[r][c])continue;
+      let before='',after='',x=r-(dir==='H'?1:0),y=c-(dir==='V'?1:0);
+      while(inside(x,y)&&board[x][y]){before=board[x][y].letter+before;x-=dir==='H'?1:0;y-=dir==='V'?1:0;}
+      x=r+(dir==='H'?1:0);y=c+(dir==='V'?1:0);
+      while(inside(x,y)&&board[x][y]){after+=board[x][y].letter;x+=dir==='H'?1:0;y+=dir==='V'?1:0;}
+      checks.set(r*15+c,!(before||after)?ABC:[...ABC].filter(ch=>lex.has(before+ch+after)).join(''));
+    }
+    let minCost=Array(225).fill(999);
+    for(let line=0;line<15;line++){let cost=999;
+      for(let k=14;k>=0;k--){let r=dir==='H'?line:k,c=dir==='H'?k:line,id=r*15+c;
+        if(anchors.has(id))cost=1;else if(cost!==999&&!board[r][c])cost++;
+        minCost[id]=cost;
+      }
+    }
+    for(let r0=0;r0<15;r0++)for(let c0=0;c0<15;c0++){
+      if(inside(r0-dr,c0-dc)&&board[r0-dr][c0-dc])continue;
+      if(minCost[r0*15+c0]>n)continue;
+      let placed=[],letters=[];
+      function rec(r,c,state,covered,used){
+        states++;let insideNow=inside(r,c);
+        if(!covered&&(!insideNow||minCost[r*15+c]>n-used))return;
+        let old=insideNow?board[r][c]:null;
+        if((!insideNow||!old)&&used&&covered&&letters.length>=2&&lex.has(letters.join(''))){
+          candidates++;
+          try{let move=validate(board,placed,lex,rack,dir),key=move.placements.map(p=>`${p.row},${p.col},${p.letter},${p.blank}`).join('|');
+            let earlier=results.get(key);if(!earlier||earlier.total<move.total)results.set(key,move);
+          }catch(e){}
+        }
+        if(!insideNow)return;
+        if(old){let nxt=lex.child(state,old.letter);if(!nxt)return;letters.push(old.letter);rec(r+dr,c+dc,nxt,covered,used);letters.pop();return;}
+        if(used>=n)return;let allowed=checks.get(r*15+c)||'';
+        for(let ch of Object.keys(rackCount)){
+          if(ch==='?'||rackCount[ch]<=0||!allowed.includes(ch))continue;let nxt=lex.child(state,ch);if(!nxt)continue;
+          rackCount[ch]--;placed.push({row:r,col:c,letter:ch,blank:false});letters.push(ch);rec(r+dr,c+dc,nxt,covered||anchors.has(r*15+c),used+1);letters.pop();placed.pop();rackCount[ch]++;
+        }
+        if(rackCount['?']>0){for(let ch of allowed){let nxt=lex.child(state,ch);if(!nxt)continue;rackCount['?']--;placed.push({row:r,col:c,letter:ch,blank:true});letters.push(ch);rec(r+dr,c+dc,nxt,covered||anchors.has(r*15+c),used+1);letters.pop();placed.pop();rackCount['?']++;}}
+      }
+      rec(r0,c0,lex.root,false,0);
+    }
+  }
+  let moves=[...results.values()].sort((a,b)=>b.total-a.total||b.sweep-a.sweep||a.main_word.localeCompare(b.main_word)||JSON.stringify(a.placements).localeCompare(JSON.stringify(b.placements))).slice(0,topN);
+  return {moves,stats:{states,candidates,valid_unique:results.size,elapsed_seconds:Math.round((performance.now()-started)/1000)}};
+ }
+ return {SIZE,ABC,POINT,PREMIUM,Lexicon,coord,boardFromRows,boardToRows,solve,validate,anchorsFor};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=Crossplay;
+</script><script>/* Faithful browser port of crossplay_vision.py's grid geometry and glyph matching.
+   Templates are the same verified 32x32 masks used by the Pyto app. */
+'use strict';
+const OCR = (() => {
+  const N=32, POINTS=Object.fromEntries('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((x,i)=>[x,[1,4,3,2,1,4,4,3,1,10,6,2,3,1,1,3,10,1,1,1,2,6,5,8,4,10][i]]));
+  let boardTemplates=null,rackTemplates=null,scoreTemplates=null;
+  async function expand(b64){
+    let bytes=Uint8Array.from(atob(b64),ch=>ch.charCodeAt(0));
+    let stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+    return JSON.parse(await new Response(stream).text());
+  }
+  function pack(obj){ return Object.fromEntries(Object.entries(obj).map(([k,exs])=>[k,exs.map(a=>{let mask=Uint8Array.from(a);let size=mask.reduce((s,x)=>s+x,0);return {mask,size}})])); }
+  async function loadTemplates(){
+    if(boardTemplates)return;
+    let [a,b,c]=await Promise.all(['glyph','rack','score'].map(k=>expand(OCR_COMPRESSED[k])));
+    boardTemplates=pack(a);scoreTemplates=pack(c);
+    rackTemplates=Object.fromEntries(Object.keys(boardTemplates).map(ch=>[ch,[...(b[ch]||[]).map(a=>{const mask=Uint8Array.from(a);return {mask,size:mask.reduce((s,n)=>s+n,0)}}),...boardTemplates[ch]]]));
+  }
+  function imagePixels(img){
+    let cv=document.createElement('canvas');cv.width=img.naturalWidth||img.width;cv.height=img.naturalHeight||img.height;
+    cv.getContext('2d',{willReadFrequently:true}).drawImage(img,0,0);const {data}=cv.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cv.width,cv.height);
+    return {w:cv.width,h:cv.height,data};
+  }
+  function pixel(im,x,y){x=Math.max(0,Math.min(im.w-1,Math.round(x)));y=Math.max(0,Math.min(im.h-1,Math.round(y)));let i=(y*im.w+x)*4,d=im.data;return [d[i],d[i+1],d[i+2]];}
+  function white(im,x,y){let [r,g,b]=pixel(im,x,y);return r>=251&&g>=251&&b>=251;}
+  function blue(im,x,y){let [r,g,b]=pixel(im,x,y);return r<120&&g>65&&g<165&&b>130&&b>g*1.14&&b>r*1.45;}
+  function range(start,end,step=1){let arr=[];for(let v=start;v<end;v+=step)arr.push(v);return arr;}
+  function detectGeometry(im){
+    const w=im.w,h=im.h,ys=range(Math.floor(.19*h),Math.floor(.76*h),Math.max(9,Math.floor(h*.008))),
+          xs=range(Math.floor(.012*w),Math.floor(.11*w),Math.max(3,Math.floor(w*.004))),
+          ps=range(Math.round(w*.83/15),Math.round(w*.99/15)+1,Math.max(1,Math.floor(w*.0015)));
+    let best=[-Infinity,0,0];
+    for(let p of ps)for(let left of xs){
+      if(left+15*p>=w)continue;
+      let gutters=range(1,15).map(k=>Math.round(left+k*p)),centers=range(0,15).map(k=>Math.round(left+(k+.5)*p));
+      let strength=0;
+      for(let y of ys){let gap=gutters.reduce((n,x)=>n+(white(im,x,y)?1:0),0)/14;
+        let cen=centers.reduce((n,x)=>n+(white(im,x,y)?1:0),0)/15;
+        if(gap-cen>.34)strength+=gap-cen-.34;
+      }
+      if(strength>best[0])best=[strength,left,p];
+    }
+    let [strength,roughLeft,roughPitch]=best;
+    if(strength<1.5)throw Error('Grid alignment uncertain. Import a full-resolution Crossplay screenshot.');
+    let bounds=[];
+    for(let y=Math.floor(.24*h);y<Math.floor(.77*h);y+=Math.max(3,Math.floor(h*.0025))){
+      let gap=0,cen=0;
+      for(let k=1;k<15;k++)gap+=white(im,Math.round(roughLeft+k*roughPitch),y)?1:0;
+      for(let k=0;k<15;k++)cen+=white(im,Math.round(roughLeft+(k+.5)*roughPitch),y)?1:0;
+      if(gap/14-cen/15<.49)continue;
+      let left=null,right=null;
+      for(let x=Math.max(0,Math.floor(w*.005));x<Math.floor(w*.15);x++){
+        let cnt=0;for(let d=0;d<10;d++)if(!white(im,x+d,y))cnt++;
+        if(cnt>=8){left=x;break;}
+      }
+      for(let x=Math.min(w-1,Math.floor(w*.995));x>Math.floor(w*.83);x--){
+        let cnt=0;for(let d=0;d<10;d++)if(!white(im,x-d,y))cnt++;
+        if(cnt>=8){right=x;break;}
+      }
+      if(left===null||right===null)continue;
+      let pitch=(right-left+1)/15;
+      if(roughPitch*.9<=pitch&&pitch<=roughPitch*1.1)bounds.push([left,right]);
+    }
+    if(bounds.length<3)throw Error('Could not confirm board gutters; screenshot may be cropped.');
+    let ls=bounds.map(v=>v[0]).sort((a,b)=>a-b),rs=bounds.map(v=>v[1]).sort((a,b)=>a-b);
+    let left=ls[Math.max(0,Math.floor(ls.length*.12))],right=rs[Math.min(rs.length-1,Math.floor(rs.length*.88))],pitch=(right-left+1)/15;
+    let centers=[0,1,2,12,13,14].map(c=>Math.round(left+(c+.46)*pitch)),topBest=[-Infinity,-Infinity,0];
+    for(let top=Math.floor(.22*h);top<Math.floor(.55*h);top++){
+      if(top+15*pitch>=h)continue;
+      let gutter=0,middle=0;
+      for(let x of centers)for(let k=1;k<15;k++)gutter+=white(im,x,Math.round(top+k*pitch)-2)?1:0;
+      for(let x of centers)for(let k=0;k<15;k++)middle+=white(im,x,Math.round(top+(k+.5)*pitch))?1:0;
+      let score=gutter/(14*centers.length)-middle/(15*centers.length);
+      if(score<.40)continue;
+      let before=centers.filter(x=>white(im,x,top-5)).length/centers.length;
+      let first=centers.filter(x=>white(im,x,Math.round(top+.45*pitch))).length/centers.length;
+      let transition=before-first,quality=score+.12*transition;
+      if(quality>topBest[0]||(quality===topBest[0]&&transition>topBest[1]))topBest=[quality,transition,top];
+    }
+    if(topBest[0]===-Infinity||topBest[1]<.4)throw Error('Cannot align all 15 board rows. Make sure the entire screenshot is visible.');
+    let geom={x:left,y:topBest[2],pitch_x:pitch,pitch_y:pitch};geom.rack=detectRack(im,geom);return geom;
+  }
+  function detectRack(im,g){
+    let w=im.w,h=im.h,step=Math.max(2,Math.floor(w/320)),ys=[],xs=range(Math.floor(w*.04),Math.floor(w*.96),step),
+        y0=Math.min(h-1,Math.round(g.y+15*g.pitch_y+h*.02));
+    for(let y=y0;y<Math.round(h*.96);y+=step){let n=xs.filter(x=>blue(im,x,y)).length/xs.length;if(n>.40)ys.push(y);}
+    if(!ys.length)return null;
+    let spans=[],st=ys[0],end=st,mingap=Math.max(4,Math.floor(w*.01));
+    for(let y of ys.slice(1)){if(y-end>mingap){spans.push([st,end]);st=y;}end=y;}spans.push([st,end]);
+    let [top,bottom]=spans.sort((a,b)=>(b[1]-b[0])-(a[1]-a[0]))[0];if(bottom-top<w*.025)return null;
+    let mid=Math.floor((top+bottom)/2),found=[];
+    for(let x=0;x<w;x++)if(blue(im,x,mid))found.push(x);
+    if(found.length<w*.3)return null;
+    return [found[0],top,found[found.length-1]-found[0]+1,bottom-top+step];
+  }
+  function crop(im,x0,y0,x1,y1){let x=Math.round(x0),y=Math.round(y0),w=Math.max(1,Math.round(x1)-x),h=Math.max(1,Math.round(y1)-y);return {im,x,y,w,h};}
+  function pix(c,x,y){return pixel(c.im,c.x+x,c.y+y);}
+  function tilePresent(c){let xs=[.13,.28,.44,.60,.77,.89];let n=0;for(let a of xs)for(let b of xs)if(blue(c.im,c.x+Math.floor(c.w*a),c.y+Math.floor(c.h*b)))n++;return n>10;}
+  function normalized(points,w,h){
+    let mask=new Uint8Array(N*N),area=0;if(!points.length)return {mask,size:0,ink:0};
+    let xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+    let cv=document.createElement('canvas');cv.width=maxx-minx+1;cv.height=maxy-miny+1;
+    let cx=cv.getContext('2d',{willReadFrequently:true});let d=cx.createImageData(cv.width,cv.height);
+    for(let [x,y] of points){let i=((y-miny)*cv.width+(x-minx))*4;d.data[i]=d.data[i+1]=d.data[i+2]=255;d.data[i+3]=255;}
+    cx.putImageData(d,0,0);let scale=Math.min(28/cv.width,28/cv.height),tw=Math.max(1,Math.round(cv.width*scale)),th=Math.max(1,Math.round(cv.height*scale));
+    let out=document.createElement('canvas');out.width=N;out.height=N;let oc=out.getContext('2d',{willReadFrequently:true});
+    oc.imageSmoothingEnabled=true;oc.imageSmoothingQuality='high';oc.drawImage(cv,0,0,cv.width,cv.height,Math.floor((N-tw)/2),Math.floor((N-th)/2),tw,th);
+    let pixels=oc.getImageData(0,0,N,N).data;
+    for(let i=0;i<N*N;i++){mask[i]=(pixels[i*4]>=100&&pixels[i*4+3]>=100)?1:0;area+=mask[i];}
+    return {mask,size:area,ink:area/(N*N)};
+  }
+  function glyphMask(c,isRack=false){
+    let {w,h}=c,left=Math.floor(w*.12),top=Math.floor(h*(isRack?.32:.27)),right=Math.floor(w*(isRack?.75:.83)),bottom=Math.floor(h*.91);
+    let cw=right-left,ch=bottom-top,active=new Set();
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){let [r,g,b]=pix(c,left+x,top+y);if(Math.min(r,g,b)>205&&Math.max(r,g,b)-Math.min(r,g,b)<45)active.add(y*cw+x);}
+    let comps=[];while(active.size){let seed=active.values().next().value;active.delete(seed);let stack=[seed],comp=[];
+      while(stack.length){let id=stack.pop(),x=id%cw,y=Math.floor(id/cw);comp.push([x,y]);
+        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+          if(!dx&&!dy)continue;let xx=x+dx,yy=y+dy,v=yy*cw+xx;
+          if(xx>=0&&xx<cw&&yy>=0&&yy<ch&&active.delete(v))stack.push(v);
+        }
+      }comps.push(comp);
+    }
+    let minArea=Math.max(5,Math.floor(w*h*(isRack?.007:.008))),candidates=[];
+    for(let pts of comps){if(pts.length<minArea)continue;
+      if(!pts.some(([x,y])=>w*.27<=left+x&&left+x<=w*.64&&h*.44<=top+y&&top+y<=h*.81))continue;
+      let xs=pts.map(q=>q[0]),ys=pts.map(q=>q[1]);let cx=(Math.min(...xs)+Math.max(...xs))/2+left,cy=(Math.min(...ys)+Math.max(...ys))/2+top;
+      if(cx<w*.19||cx>w*.67||cy<h*.36||cy>h*.82)continue;
+      candidates.push(pts);
+    }
+    if(!candidates.length)return {mask:new Uint8Array(1024),size:0,ink:0};
+    let selected=candidates.sort((a,b)=>b.length-a.length)[0];return normalized(selected,cw,ch);
+  }
+  function scoreMask(c,isRack=false){
+    let left=Math.floor(c.w*(isRack?.66:.65)),right=Math.floor(c.w*.97),top=Math.floor(c.h*.025),bottom=Math.floor(c.h*(isRack?.35:.36)),pts=[];
+    for(let y=top;y<bottom;y++)for(let x=left;x<right;x++){let [r,g,b]=pix(c,x,y);if(Math.min(r,g,b)>205&&Math.max(r,g,b)-Math.min(r,g,b)<45)pts.push([x-left,y-top]);}
+    return normalized(pts,right-left,bottom-top);
+  }
+  function sim(a,b){let n=0,x=a.mask,y=b.mask;for(let i=0;i<1024;i++)n+=x[i]&y[i];return 2*n/Math.max(1,a.size+b.size);}
+  function rank(mask,library){return Object.entries(library).filter(([,arr])=>arr.length).map(([ch,arr])=>[Math.max(...arr.map(m=>sim(mask,m))),ch]).sort((a,b)=>b[0]-a[0]);}
+  function recognize(c,library,isRack=false){let glyph=glyphMask(c,isRack);if(glyph.ink<.018)return {letter:'?',conf:0,ranked:[],glyph};let ranked=rank(glyph,library);if(!ranked.length)return {letter:'?',conf:0,ranked:[],glyph};let best=ranked[0][0],margin=best-(ranked[1]?.[0]||0);return {letter:ranked[0][1],conf:Math.round(Math.min(best,Math.max(0,margin*3+.48))*1000)/1000,ranked:ranked.slice(0,3),glyph};}
+  function scoreRanks(c,isRack=false){return rank(scoreMask(c,isRack),scoreTemplates);}
+  async function read(img){await loadTemplates();let im=imagePixels(img),geometry=detectGeometry(im),board=Array.from({length:15},()=>Array(15).fill('.')),warnings=[],scores={};
+    for(let r=0;r<15;r++)for(let col=0;col<15;col++){
+      let x0=Math.round(geometry.x+col*geometry.pitch_x),y0=Math.round(geometry.y+r*geometry.pitch_y),x1=Math.round(geometry.x+(col+1)*geometry.pitch_x),y1=Math.round(geometry.y+(r+1)*geometry.pitch_y),pad=Math.floor(Math.min(x1-x0,y1-y0)*.04),c=crop(im,x0+pad,y0+pad,x1-pad,y1-pad);
+      if(!tilePresent(c))continue;
+      let result=recognize(c,boardTemplates),letter=result.letter,conf=result.conf,sc=scoreRanks(c),best=sc[0],runner=sc[1];
+      if(letter==='?'){warnings.push(`${String.fromCharCode(65+col)}${r+1}: tile detected but unreadable`);continue;}
+      if(best&&runner&&best[0]>=.83&&best[0]-runner[0]>=.075){let pts=Number(best[1]);if(pts&&pts!==POINTS[letter]){
+        let alts=rank(result.glyph,boardTemplates).filter(v=>POINTS[v[1]]===pts);let alt=alts[0];
+        if(alt&&alt[0]>=.60&&result.ranked[0][0]-alt[0]<=.16){warnings.push(`Point marker ${pts} suggests ${alt[1]}, not ${letter}; corrected`);letter=alt[1];}
+        else warnings.push(`${String.fromCharCode(65+col)}${r+1}: point marker conflicts with ${letter}; verify`);
+      }}
+      let blank=false;if(POINTS[letter]!==10&&best&&runner&&best[1]==='0'&&best[0]>=.72&&best[0]-runner[0]>.035)blank=true;
+      else if(!best||!runner||!['0',String(POINTS[letter])].includes(best[1])||best[0]<.60)warnings.push(`${String.fromCharCode(65+col)}${r+1}: small point marker uncertain; check blank status`);
+      board[r][col]=blank?letter.toLowerCase():letter;scores[`${String.fromCharCode(65+col)}${r+1}`]=conf;
+      if(conf<.65)warnings.push(`${String.fromCharCode(65+col)}${r+1}: ${letter}, confidence ${conf.toFixed(2)}; tap to verify`);
+    }
+    let rack=[];
+    if(!geometry.rack){warnings.push('Rack not found; enter rack manually');rack=Array(7).fill(null);}
+    else{let [x,y,rw,rh]=geometry.rack;
+      for(let i=0;i<7;i++){
+        let c=crop(im,Math.round(x+i*rw/7),Math.round(y),Math.round(x+(i+1)*rw/7),Math.round(y+rh));
+        let result=recognize(c,rackTemplates,true),letter=result.letter,sc=scoreRanks(c,true),best=sc[0],runner=sc[1];
+        if(letter==='?'){let zero=best&&best[1]==='0'&&best[0]>=.70&&(!runner||best[0]-runner[0]>.04);if(!zero)warnings.push(`Rack ${i+1}: no confirmed blank; verify`);}
+        else if(best&&runner&&best[0]>=.84&&best[0]-runner[0]>=.075&&Number(best[1])!==POINTS[letter]){
+          let candidates=rank(result.glyph,rackTemplates).filter(v=>POINTS[v[1]]===Number(best[1]));
+          if(candidates.length&&candidates[0][0]>=.45){warnings.push(`Rack ${i+1}: score suggests ${candidates[0][1]}; verify`);letter=candidates[0][1];}
+          else warnings.push(`Rack ${i+1}: printed value conflicts with ${letter}`);
+        }
+        if(result.conf<.65&&letter!=='?')warnings.push(`Rack ${i+1}: ${letter} confidence ${result.conf}`);
+        rack.push(letter);
+      }
+    }
+    return {board:board.map(row=>row.join('')),rack,warnings,geometry,scores};
+  }
+  return {read,loadTemplates,detectGeometry, imagePixels};
+})();
+</script><script>const SOLVER_WORKER_SOURCE = "/* JavaScript port of crossplay_core.py, including legal move checks, blanks,\n   multipliers, all cross-words, anchor traversal and seven-tile sweep. */\n'use strict';\nconst Crossplay = (() => {\n const SIZE=15,ABC='ABCDEFGHIJKLMNOPQRSTUVWXYZ',POINT=Object.fromEntries([...ABC].map((ch,i)=>[ch,[1,4,3,2,1,4,4,3,1,10,6,2,3,1,1,3,10,1,1,1,2,6,5,8,4,10][i]])),\n PREMIUM_ROWS=[\n '3L . . 3W . . . 2L . . . 3W . . 3L',\n '. 2W . . . . 3L . 3L . . . . 2W .',\n '. . . . 2L . . . . . 2L . . . .',\n '3W . . 2L . . . 2W . . . 2L . . 3W',\n '. . 2L . . 3L . . . 3L . . 2L . .',\n '. . . . 3L . . 2L . . 3L . . . .',\n '. 3L . . . . . . . . . . . 3L .',\n '2L . . 2W . 2L . . . 2L . 2W . . 2L',\n '. 3L . . . . . . . . . . . . 3L .',\n '. . . . 3L . . 2L . . 3L . . . .',\n '. . 2L . . 3L . . . 3L . . 2L . .',\n '3W . . 2L . . . 2W . . . 2L . . 3W',\n '. . . . 2L . . . . . 2L . . . .',\n '. 2W . . . . 3L . 3L . . . . 2W .',\n '3L . . 3W . . . 2L . . . 3W . . 3L'];\n const PREMIUM=PREMIUM_ROWS.map(row=>row.split(' '));\n function coord(r,c){return String.fromCharCode(65+c)+(r+1)}\n function boardFromRows(rows){if(rows.length!==15||rows.some(v=>v.length!==15))throw Error('Expected 15 rows of 15 letters');return rows.map(row=>[...row].map(ch=>ch==='.'?null:{letter:ch.toUpperCase(),blank:ch!==ch.toUpperCase()}));}\n function boardToRows(board){return board.map(row=>row.map(x=>x?x.blank?x.letter.toLowerCase():x.letter:'.').join(''));}\n function inside(r,c){return r>=0&&c>=0&&r<15&&c<15;}\n function lowerBound(words,target,lo,hi){while(lo<hi){let mid=(lo+hi)>>1;if(words[mid]<target)lo=mid+1;else hi=mid;}return lo;}\n class Lexicon {\n  constructor(words){this.words=Array.from(new Set(words.map(w=>w.trim().toUpperCase()).filter(w=>/^[A-Z]{2,15}$/.test(w)))).sort();this.set=new Set(this.words);this.n=this.words.length;this.cache=new Map();}\n  has(word){return this.set.has(word)}\n  child(state,letter){const [prefix,lo,hi]=state,key=prefix+'|'+lo+'|'+hi+'|'+letter;let cached=this.cache.get(key);if(cached!==undefined)return cached;let target=prefix+letter,left=lowerBound(this.words,target,lo,hi),right=lowerBound(this.words,target+'[',left,hi);let result=left<right?[target,left,right]:null;if(this.cache.size>130000)this.cache.clear();this.cache.set(key,result);return result;}\n  get root(){return ['',0,this.n]}\n }\n function anchorsFor(board){const a=new Set();let has=board.some(row=>row.some(Boolean));if(!has){a.add(7*15+7);return a;}\n for(let r=0;r<15;r++)for(let c=0;c<15;c++)if(!board[r][c]&&[[0,-1],[0,1],[-1,0],[1,0]].some(([dr,dc])=>inside(r+dr,c+dc)&&board[r+dr][c+dc]))a.add(r*15+c);return a;}\n function scan(board,overlay,r,c,axis){let dr=axis==='H'?0:1,dc=axis==='H'?1:0,at=(a,b)=>overlay.get(a*15+b)||(inside(a,b)?board[a][b]:null),sr=r,sc=c;\n while(inside(sr-dr,sc-dc)&&at(sr-dr,sc-dc)){sr-=dr;sc-=dc;}let tiles=[];\n for(let rr=sr,cc=sc;inside(rr,cc)&&at(rr,cc);rr+=dr,cc+=dc)tiles.push({row:rr,col:cc,tile:at(rr,cc),placed:overlay.has(rr*15+cc)});\n return {start:[sr,sc],tiles};}\n function scoreWord(tiles){let s=0,m=1;for(let {row,col,tile,placed} of tiles){let pts=tile.blank?0:POINT[tile.letter],p=PREMIUM[row][col];if(placed){if(p==='2L')pts*=2;if(p==='3L')pts*=3;if(p==='2W')m*=2;if(p==='3W')m*=3;}s+=pts;}return s*m;}\n function validate(board,placements,lex,rack,orientation){\n  if(placements.length<1||placements.length>7)throw Error('Wrong number of tiles');let overlay=new Map(),available={};for(let ch of rack)available[ch]=(available[ch]||0)+1;\n  for(let p of placements){if(!inside(p.row,p.col)||board[p.row][p.col])throw Error('Overwrites board');let id=p.row*15+p.col,k=p.blank?'?':p.letter;\n    if(overlay.has(id))throw Error('Duplicate placement');overlay.set(id,{letter:p.letter,blank:p.blank});available[k]=(available[k]||0)-1;if(available[k]<0)throw Error('Tile unavailable');}\n  let rows=new Set(placements.map(p=>p.row)),cols=new Set(placements.map(p=>p.col));if(rows.size>1&&cols.size>1)throw Error('Not in one line');\n  let occupied=board.some(row=>row.some(Boolean));\n  if(!occupied){if(!overlay.has(7*15+7))throw Error('Center required');}\n  else if(!placements.some(({row,col})=>[[0,-1],[0,1],[-1,0],[1,0]].some(([dr,dc])=>inside(row+dr,col+dc)&&board[row+dr][col+dc])))throw Error('Must connect');\n  let axis=placements.length>1?(rows.size===1?'H':'V'):orientation||'H',p=placements[0],main=scan(board,overlay,p.row,p.col,axis);\n  if(placements.some(p=>!main.tiles.some(t=>t.row===p.row&&t.col===p.col)))throw Error('Gaps');\n  let seen=new Set(),words=[];\n  function consider(s,dir){if(s.tiles.length<2)return;let id=s.start.join(',')+dir;if(seen.has(id))return;seen.add(id);let word=s.tiles.map(x=>x.tile.letter).join('');if(!lex.has(word))throw Error('Not in dictionary: '+word);\n    words.push({word,score:scoreWord(s.tiles),start:s.start,direction:dir});}\n  consider(main,axis);let cross=axis==='H'?'V':'H';for(let p of placements)consider(scan(board,overlay,p.row,p.col,cross),cross);\n  if(!words.length)throw Error('No word');let sweep=placements.length===7?40:0;\n  return {placements:placements.slice().sort((a,b)=>a.row-b.row||a.col-b.col),words,sweep,total:sweep+words.reduce((s,w)=>s+w.score,0),main_word:words[0].word,main_start:words[0].start,main_direction:words[0].direction};\n }\n function solve(rows,rack,lex,topN=10){\n  rack=rack.toUpperCase().replace(/\\s/g,'');if(!rack||rack.length>7||!/^[A-Z?]+$/.test(rack))throw Error('Rack requires 1\u20137 letters; ? represents blank');\n  const board=boardFromRows(rows),anchors=anchorsFor(board),results=new Map(),rackCount={};for(let ch of rack)rackCount[ch]=(rackCount[ch]||0)+1;\n  const n=rack.length,started=performance.now();let states=0,candidates=0;\n  for(let dir of ['H','V']){\n    let dr=dir==='H'?0:1,dc=dir==='H'?1:0,checks=new Map();\n    for(let r=0;r<15;r++)for(let c=0;c<15;c++){\n      if(board[r][c])continue;\n      let before='',after='',x=r-(dir==='H'?1:0),y=c-(dir==='V'?1:0);\n      while(inside(x,y)&&board[x][y]){before=board[x][y].letter+before;x-=dir==='H'?1:0;y-=dir==='V'?1:0;}\n      x=r+(dir==='H'?1:0);y=c+(dir==='V'?1:0);\n      while(inside(x,y)&&board[x][y]){after+=board[x][y].letter;x+=dir==='H'?1:0;y+=dir==='V'?1:0;}\n      checks.set(r*15+c,!(before||after)?ABC:[...ABC].filter(ch=>lex.has(before+ch+after)).join(''));\n    }\n    let minCost=Array(225).fill(999);\n    for(let line=0;line<15;line++){let cost=999;\n      for(let k=14;k>=0;k--){let r=dir==='H'?line:k,c=dir==='H'?k:line,id=r*15+c;\n        if(anchors.has(id))cost=1;else if(cost!==999&&!board[r][c])cost++;\n        minCost[id]=cost;\n      }\n    }\n    for(let r0=0;r0<15;r0++)for(let c0=0;c0<15;c0++){\n      if(inside(r0-dr,c0-dc)&&board[r0-dr][c0-dc])continue;\n      if(minCost[r0*15+c0]>n)continue;\n      let placed=[],letters=[];\n      function rec(r,c,state,covered,used){\n        states++;let insideNow=inside(r,c);\n        if(!covered&&(!insideNow||minCost[r*15+c]>n-used))return;\n        let old=insideNow?board[r][c]:null;\n        if((!insideNow||!old)&&used&&covered&&letters.length>=2&&lex.has(letters.join(''))){\n          candidates++;\n          try{let move=validate(board,placed,lex,rack,dir),key=move.placements.map(p=>`${p.row},${p.col},${p.letter},${p.blank}`).join('|');\n            let earlier=results.get(key);if(!earlier||earlier.total<move.total)results.set(key,move);\n          }catch(e){}\n        }\n        if(!insideNow)return;\n        if(old){let nxt=lex.child(state,old.letter);if(!nxt)return;letters.push(old.letter);rec(r+dr,c+dc,nxt,covered,used);letters.pop();return;}\n        if(used>=n)return;let allowed=checks.get(r*15+c)||'';\n        for(let ch of Object.keys(rackCount)){\n          if(ch==='?'||rackCount[ch]<=0||!allowed.includes(ch))continue;let nxt=lex.child(state,ch);if(!nxt)continue;\n          rackCount[ch]--;placed.push({row:r,col:c,letter:ch,blank:false});letters.push(ch);rec(r+dr,c+dc,nxt,covered||anchors.has(r*15+c),used+1);letters.pop();placed.pop();rackCount[ch]++;\n        }\n        if(rackCount['?']>0){for(let ch of allowed){let nxt=lex.child(state,ch);if(!nxt)continue;rackCount['?']--;placed.push({row:r,col:c,letter:ch,blank:true});letters.push(ch);rec(r+dr,c+dc,nxt,covered||anchors.has(r*15+c),used+1);letters.pop();placed.pop();rackCount['?']++;}}\n      }\n      rec(r0,c0,lex.root,false,0);\n    }\n  }\n  let moves=[...results.values()].sort((a,b)=>b.total-a.total||b.sweep-a.sweep||a.main_word.localeCompare(b.main_word)||JSON.stringify(a.placements).localeCompare(JSON.stringify(b.placements))).slice(0,topN);\n  return {moves,stats:{states,candidates,valid_unique:results.size,elapsed_seconds:Math.round((performance.now()-started)/1000)}};\n }\n return {SIZE,ABC,POINT,PREMIUM,Lexicon,coord,boardFromRows,boardToRows,solve,validate,anchorsFor};\n})();\nif(typeof module!=='undefined'&&module.exports)module.exports=Crossplay;\n\n'use strict';\n\nlet lexicon=null;\nasync function fetchWordList(){\n  const sources=['https://cdn.jsdelivr.net/gh/dolph/dictionary@master/enable1.txt','https://raw.githubusercontent.com/dolph/dictionary/master/enable1.txt','https://norvig.com/ngrams/enable1.txt'];\n  for(let url of sources){try{let response=await fetch(url,{cache:'force-cache'});if(!response.ok)continue;let text=await response.text();if(text.includes('zyzzyva')&&text.trimStart().startsWith('aa\\n'))return text;}catch(e){}}\n  throw Error('Could not load the ENABLE dictionary. Check your internet connection and try again.');\n}\nonmessage=async ({data})=>{\n if(data.type!=='solve')return;\n try{\n  if(!lexicon){postMessage({type:'progress',message:'Loading Crossplay word dictionary\u2026'});let words=(await fetchWordList()).split(/\\r?\\n/);lexicon=new Crossplay.Lexicon(words);}\n  postMessage({type:'progress',message:'Searching legal placements and scoring moves\u2026'});\n  let result=Crossplay.solve(data.board,data.rack,lexicon,10);postMessage({type:'result',result});\n }catch(error){postMessage({type:'error',message:error?.message||String(error)});}\n};\n";
+'use strict';
+(() => {
+ const $=s=>document.querySelector(s), ALPHABET=Crossplay.ABC;
+ const state={board:Array(15).fill('.'.repeat(15)),rack:Array(7).fill(null),warnings:[],moves:[],selected:0,geometry:null,selectedImg:null,imgUrl:null,editor:null,zoom:[0,0],oldBlank:false,busy:false,lexicon:null,worker:null};
+ const ids=['import','preview','review','editor','results'];
+ function page(which){for(let id of ids)$(`#${id}-page`).hidden=id!==which;window.scrollTo({top:0,behavior:'instant'});}
+ function status(where,txt,warning=false){let el=$(`#${where}-status`);el.textContent=txt;el.classList.toggle('warning',warning);}
+ function countTiles(){return state.board.join('').replace(/\./g,'').length;}
+ function saveState(){try{localStorage.setItem('crossplay-last-v1',JSON.stringify({board:state.board,rack:state.rack,warnings:state.warnings,geometry:state.geometry}));}catch(e){console.warn('Could not save locally',e);}}
+ function restoreState(){let s=JSON.parse(localStorage.getItem('crossplay-last-v1')||'null');if(!s||s.board?.length!==15)throw Error('No saved board found on this browser.');
+  state.board=s.board;state.rack=s.rack;state.warnings=s.warnings||[];state.geometry=s.geometry||null;state.moves=[];showReview();}
+ function cleanMoves(){state.moves=[];state.selected=0;saveState();}
+ function coord(r,c){return Crossplay.coord(r,c)}
+ function tileAt(r,c){return state.board[r][c]||'.';}
+ function getStyle(r,c,move){let ch=tileAt(r,c),pl=move?.placements.find(p=>p.row===r&&p.col===c);
+   if(pl)return {text:pl.blank?pl.letter.toLowerCase():pl.letter,cls:'new-tile'};
+   if(ch!=='.')return {text:ch,cls:'tile'};
+   let p=Crossplay.PREMIUM[r][c];return {text:p==='.'?'':p,cls:p==='.'?'':p.toLowerCase()};}
+ function drawBoard(container,move=null,interactive=false){container.textContent='';let frag=document.createDocumentFragment();
+   for(let r=0;r<15;r++)for(let c=0;c<15;c++){
+     let {text,cls}=getStyle(r,c,move),button=document.createElement('button');button.type='button';button.className='cell '+cls;button.textContent=text||'\u00a0';
+     button.setAttribute('role','gridcell');button.setAttribute('aria-label',`${coord(r,c)} ${text||'empty'}`);
+     if(interactive)button.onclick=()=>editBoard(r,c);else button.onclick=()=>selectResultCell(r,c,move);
+     frag.appendChild(button);
+   }container.appendChild(frag);
+ }
+ function showReview(){drawBoard($('#review-board'),null,true);$('#review-caption').textContent=`${countTiles()} existing tiles • Tap a square to edit`;
+   $('#rack').textContent='';state.rack.forEach((ch,i)=>{let btn=document.createElement('button');btn.textContent=ch===null?'!':ch==='-'?'–':ch;btn.className=ch===null?'unknown':ch==='-'?'empty':'';btn.title=`Rack tile ${i+1}`;btn.onclick=()=>editRack(i);$('#rack').appendChild(btn);});
+   let count=state.warnings.length;status('review',count?`${count} recognition warnings. Check letters and rack.`:'Review letters and confirm the rack.',count>0);page('review');}
+ function showImport(){page('import');}
+ async function acceptFile(file){
+   if(!file)return;
+   if(!file.type.startsWith('image/')&&!/\.(png|jpe?g|webp|heic)$/i.test(file.name))throw Error('Please select an image screenshot.');
+   if(state.imgUrl)URL.revokeObjectURL(state.imgUrl);state.imgUrl=URL.createObjectURL(file);
+   let img=new Image();img.decoding='async';img.src=state.imgUrl;await img.decode();state.selectedImg=img;
+   $('#preview-image').src=state.imgUrl;$('#preview-caption').textContent=`Entire image: ${img.naturalWidth} × ${img.naturalHeight} pixels`;
+   status('preview','Entire board and rack preserved • No crop');page('preview');
+ }
+ async function photoPaste(){
+   if(!navigator.clipboard?.read)throw Error('Clipboard image import is unavailable in this browser. Use Photos or Files.');
+   let entries=await navigator.clipboard.read();for(let entry of entries){let kind=entry.types.find(t=>t.startsWith('image/'));if(kind){let blob=await entry.getType(kind);await acceptFile(new File([blob],'clipboard.png',{type:kind}));return;}}
+   throw Error('Clipboard has no image. Copy the screenshot in Photos first.');
+ }
+ async function readScreenshot(){if(state.busy)return; if(!state.selectedImg){status('preview','Choose an image first.',true);return;}
+   busy(true);status('preview','Locating the grid and reading tiles…');
+   try{await new Promise(r=>setTimeout(r,40));let result=await OCR.read(state.selectedImg);
+     state.board=result.board;state.rack=result.rack;state.warnings=result.warnings;state.geometry=result.geometry;cleanMoves();showReview();}
+   catch(e){status('preview','Screenshot recognition failed: '+e.message,true);console.error(e);}
+   finally{busy(false);}
+ }
+ function busy(v){state.busy=v;$('#read-btn').disabled=v;$('#solve-btn').disabled=v;}
+ function loadSample(){state.board=['...............','......C........','......O........','......GO.......','.......FAX.....','.......F.......','.......E.......','.......D.......',...Array(7).fill('...............')];state.rack=[...'OESAIU?'];state.warnings=[];state.geometry=null;state.selectedImg=null;cleanMoves();showReview();}
+ function editBoard(r,c){state.editor={type:'board',r,c};let ch=tileAt(r,c);state.oldBlank=ch!=='.'&&ch===ch.toLowerCase();renderEditor();page('editor');}
+ function editRack(i){state.editor={type:'rack',i};renderEditor();page('editor');}
+ function renderEditor(){let e=state.editor;if(!e)return;let board=e.type==='board';
+   $('#zoom-board').hidden=!board;$('#blank-btn').hidden=!board;
+   $('#editor-heading').textContent=board?'Edit '+coord(e.r,e.c):`Rack tile ${e.i+1}`;
+   $('#editor-tip').textContent=board?'Tap a nearby tile, then choose A–Z.':`Current: ${state.rack[e.i]||'unknown'}. Select A–Z, ? or EMPTY.`;
+   if(board){let r0=Math.max(0,Math.min(10,e.r-2)),c0=Math.max(0,Math.min(10,e.c-2));state.zoom=[r0,c0];$('#zoom-board').textContent='';
+     for(let i=0;i<25;i++){let rr=r0+Math.floor(i/5),cc=c0+i%5,{text,cls}=getStyle(rr,cc),btn=document.createElement('button');btn.textContent=text||'·';btn.className=cls+((rr===e.r&&cc===e.c)?' selected':'');btn.onclick=()=>{state.editor={type:'board',r:rr,c:cc};let t=tileAt(rr,cc);state.oldBlank=t!=='.'&&t===t.toLowerCase();renderEditor();};$('#zoom-board').appendChild(btn);}
+     $('#blank-btn').textContent='Existing blank: '+(state.oldBlank?'ON':'OFF');
+   }
+   status('editor','Tap Done to return to the board.');
+ }
+ function setLetter(letter){let e=state.editor;if(e.type==='board'){let row=[...state.board[e.r]];row[e.c]=state.oldBlank?letter.toLowerCase():letter;state.board[e.r]=row.join('');}else{state.rack[e.i]=letter;}cleanMoves();renderEditor();status('editor','Updated. Choose another tile or tap Done.');}
+ function clearLetter(){let e=state.editor;if(e.type==='board'){let row=[...state.board[e.r]];row[e.c]='.';state.board[e.r]=row.join('');}else state.rack[e.i]='-';cleanMoves();renderEditor();}
+ function rackBlank(){if(state.editor.type!=='rack'){status('editor','For an existing blank, select its represented letter and turn Existing blank ON.',true);return;}setLetter('?');}
+ function toggleBlank(){let e=state.editor;if(e.type!=='board')return;state.oldBlank=!state.oldBlank;let ch=tileAt(e.r,e.c);if(ch!=='.')setLetter(ch.toUpperCase());else renderEditor();}
+ function rackString(){if(state.rack.some(c=>c===null))throw Error('Tap every unknown rack slot; select EMPTY for no tile.');let rack=state.rack.filter(c=>c!=='-').join('');if(!rack||rack.length>7||rack.split('?').length>3)throw Error('Rack needs 1–7 tiles, at most two blanks.');return rack;}
+ async function solve(){if(state.busy)return;let rack;try{rack=rackString();}catch(e){status('review',e.message,true);return;}
+   busy(true);status('review','Loading dictionary and finding all legal moves…');
+   try{
+     if(!state.worker){state.worker=new Worker(URL.createObjectURL(new Blob([SOLVER_WORKER_SOURCE],{type:'text/javascript'}))); }
+     const worker=state.worker;let job=new Promise((resolve,reject)=>{
+       worker.onmessage=e=>{if(e.data?.type==='progress')status('review',e.data.message);else if(e.data?.type==='result')resolve(e.data.result);else if(e.data?.type==='error')reject(Error(e.data.message));};
+       worker.onerror=e=>reject(Error(e.message||'Solver worker error'));
+     });worker.postMessage({type:'solve',board:state.board,rack});let result=await job;
+     state.moves=result.moves;state.selected=0;if(!state.moves.length)throw Error('No legal moves found using the current board and dictionary.');renderResults();page('results');
+   }catch(e){status('review',e.message,true);console.error(e);}finally{busy(false);}
+ }
+ function renderResults(){let m=state.moves[state.selected];if(!m)return;drawBoard($('#results-board'),m);
+   $('#move-heading').textContent=m.main_word;$('#move-score').textContent=m.total+' pts';$('#move-position').textContent=`${m.main_direction==='H'?'Across':'Down'} from ${coord(...m.main_start)} • ${m.placements.length} new tiles`;
+   let wsum=m.words.reduce((s,w)=>s+w.score,0);$('#result-breakdown').textContent=`Words: ${wsum}    Sweep: +${m.sweep}    Cross-words: ${Math.max(0,m.words.length-1)}`;
+   $('#rank-caption').textContent=`${state.selected+1} of ${state.moves.length}`;
+   const start=Math.max(0,Math.min(state.selected-2,Math.max(0,state.moves.length-5)));
+   $('#alternatives').textContent='';for(let i=start;i<Math.min(state.moves.length,start+5);i++){let item=state.moves[i],btn=document.createElement('button');btn.textContent=`${i+1}.  ${item.main_word}  •  ${item.total} pts  •  ${coord(...item.main_start)}`;btn.className=i===state.selected?'selected':'';btn.onclick=()=>{state.selected=i;renderResults();};$('#alternatives').appendChild(btn);}
+   status('results','Green = new tiles • lowercase = blank tile');
+ }
+ function shiftMove(delta){if(!state.moves.length)return;state.selected=(state.selected+delta+state.moves.length)%state.moves.length;renderResults();}
+ function selectResultCell(r,c,m){let p=m?.placements.find(p=>p.row===r&&p.col===c);status('results',p?`${coord(r,c)}: place ${p.letter}${p.blank?' using a blank tile':''}`:`${coord(r,c)}: ${tileAt(r,c)==='.'?'empty':tileAt(r,c)}`);}
+ async function saveImage(){let m=state.moves[state.selected];if(!m)return;let canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
+   if(state.selectedImg&&state.geometry){canvas.width=state.selectedImg.naturalWidth;canvas.height=state.selectedImg.naturalHeight;ctx.drawImage(state.selectedImg,0,0);let g=state.geometry;
+     for(let p of m.placements){let x=g.x+p.col*g.pitch_x,y=g.y+p.row*g.pitch_y,w=g.pitch_x*.96,h=g.pitch_y*.96;ctx.fillStyle='#058f64';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`bold ${Math.round(g.pitch_y*.57)}px Arial`;ctx.fillText(p.blank?p.letter.toLowerCase():p.letter,x+w/2,y+h*.52);}
+   }else{canvas.width=1000;canvas.height=1120;ctx.fillStyle='#f6f8fb';ctx.fillRect(0,0,1000,1120);ctx.fillStyle='#162337';ctx.font='bold 50px Arial';ctx.fillText(`${m.main_word} • ${m.total} pts`,35,66);
+     let gap=3,size=62,left=19,top=115;
+     for(let r=0;r<15;r++)for(let c=0;c<15;c++){let x=left+c*(size+gap),y=top+r*(size+gap),{text,cls}=getStyle(r,c,m);let color={'tile':'#315b98','new-tile':'#058f64','p2w':'#dee7f6','p3w':'#e9dded','p2l':'#f1e7c9','p3l':'#dce9d1'}[cls]||'#ececf0';ctx.fillStyle=color;ctx.fillRect(x,y,size,size);ctx.fillStyle=['tile','new-tile'].includes(cls)?'#fff':'#5d6a7a';ctx.font='29px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x+size/2,y+size/2);}
+   }
+   let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob){status('results','Unable to save image.',true);return;}let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='crossplay_best_move.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);status('results','Image ready: saved/downloaded by your browser.');
+ }
+ function bind(){
+   $('#photos-btn').onclick=()=>$('#photos-input').click();$('#files-btn').onclick=()=>$('#files-input').click();
+   for(let id of ['photos','files'])$(`#${id}-input`).addEventListener('change',async e=>{try{await acceptFile(e.target.files[0]);}catch(ex){status('import',ex.message,true);}e.target.value='';});
+   $('#clipboard-btn').onclick=async()=>{try{await photoPaste();}catch(e){status('import',e.message,true);}};
+   $('#resume-btn').onclick=()=>{try{restoreState();}catch(e){status('import',e.message,true);}};
+   $('#example-btn').onclick=loadSample;$('#read-btn').onclick=readScreenshot;
+   $('#another-btn').onclick=showImport;$('#new-btn').onclick=showImport;
+   $('#import-another-btn').onclick=showImport;$('#done-btn').onclick=showReview;
+   $('#blank-btn').onclick=toggleBlank;$('#clear-btn').onclick=clearLetter;$('#rack-blank-btn').onclick=rackBlank;
+   $('#solve-btn').onclick=solve;$('#edit-btn').onclick=showReview;
+   $('#previous-btn').onclick=()=>shiftMove(-1);$('#next-btn').onclick=()=>shiftMove(1);
+   $('#save-btn').onclick=saveImage;$('#new-screenshot-btn').onclick=showImport;
+   let frag=document.createDocumentFragment();for(let ch of ALPHABET){let b=document.createElement('button');b.textContent=ch;b.onclick=()=>setLetter(ch);frag.appendChild(b);}$('#palette').appendChild(frag);
+ }
+ bind();page('import');
+ window.CrossplayAppTest={state,loadSample,showReview,readScreenshot,renderResults};
+})();
+</script>
+</body></html>
