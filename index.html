@@ -306,6 +306,13 @@ h2 {
   background: #dce9d1
 }
 
+/* A subtle inset border does not change board/rack sizing or tile colors. */
+.review-board .cell.recognition-warning,
+#zoom-board button.recognition-warning,
+.rack button.recognition-warning {
+  box-shadow: inset 0 0 0 1.5px #f6c945;
+}
+
 .rack-label {
   font-size: 13px;
   letter-spacing: -.1px;
@@ -1062,7 +1069,7 @@ const OCR = (() => {
 // DOC: A high-confidence point-value mismatch can identify an alternate letter.
       if(best&&runner&&best[0]>=.83&&best[0]-runner[0]>=.075){let pts=Number(best[1]);if(pts&&pts!==POINTS[letter]){
         let alts=rank(result.glyph,boardTemplates).filter(v=>POINTS[v[1]]===pts);let alt=alts[0];
-        if(alt&&alt[0]>=.60&&result.ranked[0][0]-alt[0]<=.16){warnings.push(`Point marker ${pts} suggests ${alt[1]}, not ${letter}; corrected`);letter=alt[1];}
+        if(alt&&alt[0]>=.60&&result.ranked[0][0]-alt[0]<=.16){warnings.push(`${String.fromCharCode(65+col)}${r+1}: point marker ${pts} suggests ${alt[1]}, not ${letter}; corrected`);letter=alt[1];}
         else warnings.push(`${String.fromCharCode(65+col)}${r+1}: point marker conflicts with ${letter}; verify`);
       }}
 // DOC: A zero-point marker may indicate a played blank, encoded by lowercase.
@@ -1075,7 +1082,7 @@ const OCR = (() => {
     }
     let rack=[];
 // DOC: If no rack area is detected, leave its letters unresolved for user input.
-    if(!geometry.rack){warnings.push('Rack not found; enter rack manually');rack=Array(7).fill(null);}
+    if(!geometry.rack){for(let i=0;i<7;i++)warnings.push(`Rack ${i+1}: not found; enter manually`);rack=Array(7).fill(null);}
     else{let [x,y,rw,rh]=geometry.rack;
 
 // DOC: RACK LOOP: divide the detected rack into exactly seven slots and recognize each.
@@ -1133,6 +1140,28 @@ const SOLVER_WORKER_SOURCE = "/* JavaScript port of crossplay_core.py, including
  function cleanMoves(){state.moves=[];state.selected=0;saveState();}
  function coord(r,c){return Crossplay.coord(r,c)}
  function tileAt(r,c){return state.board[r][c]||'.';}
+
+ // DOC: Existing OCR warnings begin with a board coordinate (A1: to O15:) or Rack n:.
+ // Preserve every warning message; this helper only maps its location to an outlined tile.
+ function warnedBoardTile(r,c){
+   return state.warnings.some(w=>w.startsWith(coord(r,c)+':'));
+ }
+ function warnedRackTile(i){
+   return state.warnings.some(w=>w.startsWith('Rack '+(i+1)+':')||
+     (w.startsWith('Rack not found;')&&state.rack[i]===null));
+ }
+ // DOC: Editing or clearing one tile confirms it, but other warnings remain visible.
+ function dismissTileWarning(editor){
+   if(!editor)return;
+   const prefix=editor.type==='board'?coord(editor.r,editor.c)+':':'Rack '+(editor.i+1)+':';
+   state.warnings=state.warnings.filter(w=>!w.startsWith(prefix));
+   if(editor.type==='rack'&&state.warnings.some(w=>w.startsWith('Rack not found;'))){
+     // Migrate older saved, non-location-specific rack errors into per-slot errors.
+     state.warnings=state.warnings.filter(w=>!w.startsWith('Rack not found;'));
+     for(let i=0;i<7;i++)if(i!==editor.i&&state.rack[i]===null)
+       state.warnings.push('Rack '+(i+1)+': not found; enter manually');
+   }
+ }
 // DOC: Choose between bonus squares, existing blue letters and proposed green letters.
  function getStyle(r,c,move){let ch=tileAt(r,c),pl=move?.placements.find(p=>p.row===r&&p.col===c);
    if(pl)return {text:pl.blank?pl.letter.toLowerCase():pl.letter,cls:'new-tile'};
@@ -1143,8 +1172,8 @@ const SOLVER_WORKER_SOURCE = "/* JavaScript port of crossplay_core.py, including
  function drawBoard(container,move=null,interactive=false){container.textContent='';let frag=document.createDocumentFragment();
    for(let r=0;r<15;r++)for(let c=0;c<15;c++){
 // DOC: Every button represents one specific row/column position.
-     let {text,cls}=getStyle(r,c,move),button=document.createElement('button');button.type='button';button.className='cell '+cls;button.textContent=text||'\u00a0';
-     button.setAttribute('role','gridcell');button.setAttribute('aria-label',`${coord(r,c)} ${text||'empty'}`);
+     let {text,cls}=getStyle(r,c,move),button=document.createElement('button');button.type='button';button.className='cell '+cls+(interactive&&warnedBoardTile(r,c)?' recognition-warning':'');button.textContent=text||'\u00a0';
+     button.setAttribute('role','gridcell');button.setAttribute('aria-label',`${coord(r,c)} ${text||'empty'}${interactive&&warnedBoardTile(r,c)?', recognition warning':''}`);
      if(interactive)button.onclick=()=>editBoard(r,c);else button.onclick=()=>selectResultCell(r,c,move);
      frag.appendChild(button);
    }container.appendChild(frag);
@@ -1153,7 +1182,7 @@ const SOLVER_WORKER_SOURCE = "/* JavaScript port of crossplay_core.py, including
 // DOC: REVIEW RENDER: refresh the board, rack controls and warning count.
  function showReview(){drawBoard($('#review-board'),null,true);$('#review-caption').textContent=`${countTiles()} existing tiles • Tap a square to edit`;
 // DOC: Unrecognized and empty rack slots use different visual states.
-   $('#rack').textContent='';state.rack.forEach((ch,i)=>{let btn=document.createElement('button');btn.textContent=ch===null?'!':ch==='-'?'–':ch;btn.className=ch===null?'unknown':ch==='-'?'empty':'';btn.title=`Rack tile ${i+1}`;btn.onclick=()=>editRack(i);$('#rack').appendChild(btn);});
+   $('#rack').textContent='';state.rack.forEach((ch,i)=>{let btn=document.createElement('button');btn.textContent=ch===null?'!':ch==='-'?'–':ch;btn.className=(ch===null?'unknown':ch==='-'?'empty':'')+(warnedRackTile(i)?' recognition-warning':'');btn.title=`Rack tile ${i+1}${warnedRackTile(i)?' - recognition warning':''}`;btn.onclick=()=>editRack(i);$('#rack').appendChild(btn);});
    let count=state.warnings.length;status('review',count?`${count} recognition warnings. Check letters and rack.`:'Review letters and confirm the rack.',count>0);page('review');}
  function showImport(){page('import');}
 
@@ -1201,15 +1230,15 @@ const SOLVER_WORKER_SOURCE = "/* JavaScript port of crossplay_core.py, including
    $('#editor-tip').textContent=board?'Tap a nearby tile, then choose A–Z.':`Current: ${state.rack[e.i]||'unknown'}. Select A–Z, ? or EMPTY.`;
 // DOC: Keep the zoomed 5x5 area inside the 15x15 board near edges.
    if(board){let r0=Math.max(0,Math.min(10,e.r-2)),c0=Math.max(0,Math.min(10,e.c-2));state.zoom=[r0,c0];$('#zoom-board').textContent='';
-     for(let i=0;i<25;i++){let rr=r0+Math.floor(i/5),cc=c0+i%5,{text,cls}=getStyle(rr,cc),btn=document.createElement('button');btn.textContent=text||'·';btn.className=cls+((rr===e.r&&cc===e.c)?' selected':'');btn.onclick=()=>{state.editor={type:'board',r:rr,c:cc};let t=tileAt(rr,cc);state.oldBlank=t!=='.'&&t===t.toLowerCase();renderEditor();};$('#zoom-board').appendChild(btn);}
+     for(let i=0;i<25;i++){let rr=r0+Math.floor(i/5),cc=c0+i%5,{text,cls}=getStyle(rr,cc),btn=document.createElement('button');btn.textContent=text||'·';btn.className=cls+(warnedBoardTile(rr,cc)?' recognition-warning':'')+((rr===e.r&&cc===e.c)?' selected':'');btn.onclick=()=>{state.editor={type:'board',r:rr,c:cc};let t=tileAt(rr,cc);state.oldBlank=t!=='.'&&t===t.toLowerCase();renderEditor();};$('#zoom-board').appendChild(btn);}
      $('#blank-btn').textContent='Existing blank: '+(state.oldBlank?'ON':'OFF');
    }
    status('editor','Tap Done to return to the board.');
  }
 // DOC: Changing a letter preserves its blank/nonblank status unless toggled.
- function setLetter(letter){let e=state.editor;if(e.type==='board'){let row=[...state.board[e.r]];row[e.c]=state.oldBlank?letter.toLowerCase():letter;state.board[e.r]=row.join('');}else{state.rack[e.i]=letter;}cleanMoves();renderEditor();status('editor','Updated. Choose another tile or tap Done.');}
+ function setLetter(letter){let e=state.editor;if(e.type==='board'){let row=[...state.board[e.r]];row[e.c]=state.oldBlank?letter.toLowerCase():letter;state.board[e.r]=row.join('');}else{state.rack[e.i]=letter;}dismissTileWarning(e);cleanMoves();renderEditor();status('editor','Updated. Choose another tile or tap Done.');}
 // DOC: Empty board squares use '.' while cleared rack slots use '-'.
- function clearLetter(){let e=state.editor;if(e.type==='board'){let row=[...state.board[e.r]];row[e.c]='.';state.board[e.r]=row.join('');}else state.rack[e.i]='-';cleanMoves();renderEditor();}
+ function clearLetter(){let e=state.editor;if(e.type==='board'){let row=[...state.board[e.r]];row[e.c]='.';state.board[e.r]=row.join('');}else state.rack[e.i]='-';dismissTileWarning(e);cleanMoves();renderEditor();}
 // DOC: An unplayed rack blank uses '?'; a played blank has a selected letter.
  function rackBlank(){if(state.editor.type!=='rack'){status('editor','For an existing blank, select its represented letter and turn Existing blank ON.',true);return;}setLetter('?');}
 // DOC: Toggling a played blank changes its stored case and therefore its score.
